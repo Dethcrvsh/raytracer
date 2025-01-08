@@ -3,7 +3,9 @@
 #include <fstream>
 #include <sstream>
 
-GLFWwindow* GL::init() {
+namespace GL {
+
+GLFWwindow* init() {
     // Initialize GLFW
     if (!glfwInit()) {
         std::cerr << "Failed to initialize GLFW" << std::endl;
@@ -32,13 +34,13 @@ GLFWwindow* GL::init() {
     return window;
 }
 
-void GL::run_loop(GLFWwindow* const window, std::function<void()> const& callback) {
+void run_loop(GLFWwindow* const window, std::function<void()> const& callback) {
     while (!glfwWindowShouldClose(window)) {
         callback();
     }
 }
 
-std::string GL::read_file(std::string const& file_path) {
+std::string read_file(std::string const& file_path) {
     std::string const abs_fp {std::string{SHADER_DIR} + file_path};
     std::ifstream const ifs {abs_fp};
 
@@ -51,7 +53,7 @@ std::string GL::read_file(std::string const& file_path) {
     return ss.str();
 }
 
-GLuint GL::compile_shader(std::string const& source, GLenum const type) {
+GLuint compile_shader(std::string const& source, GLenum const type) {
     GLuint const shader {glCreateShader(type)};
     char const* source_str {source.c_str()};
 
@@ -70,3 +72,37 @@ GLuint GL::compile_shader(std::string const& source, GLenum const type) {
 
     return shader;
 }
+
+GLuint create_program(std::string const& vertex_path, std::string const& fragment_path) {
+    // Read shader files
+    std::string const vertex_code {read_file(vertex_path)};
+    std::string const fragment_code {read_file(fragment_path)};
+
+    // Compile Shaders
+    GLuint vertex_shader {compile_shader(vertex_code, GL_VERTEX_SHADER)};
+    GLuint fragment_shader {compile_shader(fragment_code, GL_FRAGMENT_SHADER)};
+
+    // Create and link program
+    GLuint const program {glCreateProgram()};
+    glAttachShader(program, vertex_shader);
+    glAttachShader(program, fragment_shader);
+    glLinkProgram(program);
+
+    // Check linking status
+    GLint success;
+    glGetProgramiv(program, GL_LINK_STATUS, &success);
+    if (!success) {
+        char infoLog[512];
+        glGetProgramInfoLog(program, 512, nullptr, infoLog);
+        std::cerr << "Program linking error: " << infoLog << std::endl;
+        throw std::runtime_error("Program linking failed");
+    }
+    
+    // Clean up shaders (no longer needed after linking)
+    glDeleteShader(vertex_shader);
+    glDeleteShader(fragment_shader);
+
+    return program;
+}
+
+};
