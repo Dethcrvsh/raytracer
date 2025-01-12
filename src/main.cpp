@@ -1,9 +1,13 @@
 #include "gl.h"
+#include "model.h"
 #include <iostream>
+
 
 GLFWwindow* window;
 GLuint program;
 GLuint VAO, VBO;
+Model* m;
+Model* m2;
 
 void main_loop() {
     // Clear the screen with a color (e.g., Cornflower Blue)
@@ -11,11 +15,12 @@ void main_loop() {
     glClear(GL_COLOR_BUFFER_BIT);
 
     glUseProgram(program);
-
-    // Draw the triangle
-    glBindVertexArray(VAO);
-    glDrawArrays(GL_TRIANGLES, 0, 3);
-    glBindVertexArray(0);
+    glUniform2f(
+        glGetUniformLocation(program, "resolution"),
+        static_cast<float>(GL::WIDTH),
+        static_cast<float>(GL::HEIGHT)
+    );
+    m->draw();
 
     // Swap front and back buffers
     glfwSwapBuffers(window);
@@ -30,24 +35,19 @@ int main() {
 
     // Vertex data
     float vertices[] = {
-        0.0f,  0.5f, 0.0f,  // Top
-       -0.5f, -0.5f, 0.0f,  // Bottom left
-        0.5f, -0.5f, 0.0f   // Bottom right
+        -1.0f,  1.0f, 0.0f,  // Top
+       -1.0f, -1.0f, 0.0f,  // Bottom left
+        1.0f, -1.0f, 0.0f   // Bottom right
     };
 
-    // Set up VAO and VBO
-    glGenVertexArrays(1, &VAO);
-    glGenBuffers(1, &VBO);
-
-    glBindVertexArray(VAO);
-
-    glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
-    glEnableVertexAttribArray(0);
-
-    glBindVertexArray(0);
+    m = new Model({
+        -1.0f,  1.0f, 0.0f,  // Top
+       -1.0f, -1.0f, 0.0f,  // Bottom left
+        1.0f, -1.0f, 0.0f,   // Bottom right
+        -1.0f,  1.0f, 0.0f,  // Top
+        1.0f, 1.0f, 0.0f,  // Top left
+        1.0f, -1.0f, 0.0f   // Bottom right
+    });
 
     GL::run_loop(window, main_loop);
 }
