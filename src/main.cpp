@@ -1,13 +1,13 @@
 #include "gl.h"
 #include "model.h"
+#include <GLFW/glfw3.h>
 #include <iostream>
 
 
 GLFWwindow* window;
 GLuint program;
 GLuint VAO, VBO;
-Model* m;
-Model* m2;
+Model m;
 
 void main_loop() {
     // Clear the screen with a color (e.g., Cornflower Blue)
@@ -20,7 +20,11 @@ void main_loop() {
         static_cast<float>(GL::WIDTH),
         static_cast<float>(GL::HEIGHT)
     );
-    m->draw();
+    glUniform1f(
+        glGetUniformLocation(program, "time"),
+        glfwGetTime()
+    );
+    m.draw();
 
     // Swap front and back buffers
     glfwSwapBuffers(window);
@@ -40,7 +44,7 @@ int main() {
         1.0f, -1.0f, 0.0f   // Bottom right
     };
 
-    m = new Model({
+    m = Model({
         -1.0f,  1.0f, 0.0f,  // Top
        -1.0f, -1.0f, 0.0f,  // Bottom left
         1.0f, -1.0f, 0.0f,   // Bottom right

@@ -10,6 +10,7 @@ struct Model {
     GLuint vao;
     GLuint vbo;
 
+    Model() = default;
     Model(std::initializer_list<float> const vertices);
     void draw() const;
 };
