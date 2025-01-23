@@ -1,6 +1,8 @@
 #version 330 core
 
 in vec2 frag_coord;
+in vec2 tex_coord;
+
 out vec4 out_color;
 
 uniform vec2 resolution;

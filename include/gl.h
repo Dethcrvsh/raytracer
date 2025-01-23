@@ -7,8 +7,8 @@
 
 
 namespace GL {
-    static int const WIDTH {800};
-    static int const HEIGHT {600};
+    static int const WIDTH {640 * 2};
+    static int const HEIGHT {480 * 2};
     
     typedef struct FBO {
         GLuint fbo;

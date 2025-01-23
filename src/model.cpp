@@ -1,6 +1,7 @@
 #include "model.h"
 #include "gl.h"
 #include <iostream>
+#include <ostream>
 
 Model::Model(std::vector<GLfloat> const &verts,
              std::vector<GLfloat> const &norms,
@@ -41,6 +42,9 @@ void Model::draw(GLuint program, std::string const &vertex_var,
     // Vertex data
     glBindBuffer(GL_ARRAY_BUFFER, vbo_v);
     var = glGetAttribLocation(program, vertex_var.c_str());
+    if (var == -1) {
+        std::cerr << "OpenGL Error: Could not find variable " + vertex_var << std::endl;
+    }
     glVertexAttribPointer(var, 3, GL_FLOAT, GL_FALSE, 0, 0);
     glEnableVertexAttribArray(var);
 
@@ -49,6 +53,9 @@ void Model::draw(GLuint program, std::string const &vertex_var,
     if (normal_var != "") {
         glBindBuffer(GL_ARRAY_BUFFER, vbo_n);
         var = glGetAttribLocation(program, normal_var.c_str());
+        if (var == -1) {
+            std::cerr << "OpenGL Error: Could not find variable " + normal_var << std::endl;
+        }
         glVertexAttribPointer(var, 3, GL_FLOAT, GL_FALSE, 0, 0);
         glEnableVertexAttribArray(var);
     }
@@ -57,6 +64,9 @@ void Model::draw(GLuint program, std::string const &vertex_var,
     if (tex_var != "") {
         glBindBuffer(GL_ARRAY_BUFFER, vbo_t);
         var = glGetAttribLocation(program, tex_var.c_str());
+        if (var == -1) {
+            std::cerr << "OpenGL Error: Could not find variable " + tex_var << std::endl;
+        }
         glVertexAttribPointer(var, 2, GL_FLOAT, GL_FALSE, 0, 0);
         glEnableVertexAttribArray(var);
     }
