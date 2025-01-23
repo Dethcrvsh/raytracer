@@ -53,6 +53,10 @@ vec3 random_on_hemisphere(const vec3 normal) {
     return on_hemisphere ? dir : -dir;
 }
 
+vec4 to_gamma(const vec4 color) {
+    return vec4(sqrt(color.r), sqrt(color.g), sqrt(color.b), color.b);
+}
+
 /**************************************
 *           RAY FUNCTIONS
 ***************************************/
@@ -173,20 +177,18 @@ HitInfo get_hit(Ray ray) {
 }
 
 vec4 get_ray_color(Ray ray) {
-    int bounces = 10;
-    vec4 color = vec4(0.0, 0.0, 0.0, 0.0);
+    int bounces = 100;
 
     for (int i = 0; i < bounces; i++) {
         HitInfo hit_info = get_hit(ray);
-        vec4 new_color = vec4(0.0, 0.0, 0.0, 0.0);
 
         if (hit_info.t < MAX_DIST) {
-            vec3 dir = random_on_hemisphere(hit_info.normal);
+            vec3 dir = normalize(hit_info.normal + random_on_hemisphere(hit_info.normal));
             ray = Ray(hit_info.p, dir);
         } else {
             float a = 0.5*(ray.dir.y + 1.0);
             vec3 color = (1.0-a)*vec3(1.0, 1.0, 1.0) + a*vec3(0.5, 0.7, 1.0);
-            color *= (0.9 / (i+1));
+            color *= pow(0.5, i);
             return vec4(color, 1.0);
         }
     }
@@ -203,5 +205,5 @@ void main() {
         color += get_ray_color(ray).xyz;
     }
 
-    out_color = vec4(color / SAMPLES_PER_PIXEL, 1.0);
+    out_color = to_gamma(vec4(color / SAMPLES_PER_PIXEL, 1.0));
 }
