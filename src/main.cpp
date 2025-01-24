@@ -36,7 +36,7 @@ void main_loop() {
         glGetUniformLocation(program, "frame"),
         frame
     );
-    m.draw(program, "in_position", "", "");
+    m.draw(program, "in_position", "", "in_tex_coord");
 
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     glUseProgram(tex_program);
