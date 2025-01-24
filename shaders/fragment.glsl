@@ -7,6 +7,9 @@ out vec4 out_color;
 
 uniform vec2 resolution;
 uniform float time;
+uniform int frame;
+
+uniform sampler2D tex;
 
 // Camera
 const int FOV = 70;
@@ -14,7 +17,7 @@ const int FOV = 70;
 // Ray
 const float MIN_DIST = 0.001;
 const float MAX_DIST = 100;
-const int SAMPLES_PER_PIXEL = 25;
+const int SAMPLES_PER_PIXEL = 10;
 
 // Constants
 const float PI = 3.141592;
@@ -45,8 +48,11 @@ vec2 sample_square() {
 }
 
 vec3 vec3_random() {
-    // TODO: Make sure we never divide with 0
-    return normalize(vec3(random(-1, 1), random(-1, 1), random(-1, 1)));
+    vec3 rand = vec3(random(-1, 1), random(-1, 1), random(-1, 1));
+    while (length(rand) < 0.001) {
+        rand = vec3(random(-1, 1), random(-1, 1), random(-1, 1));
+    }
+    return normalize(rand);
 }
 
 vec3 random_on_hemisphere(const vec3 normal) {
@@ -207,5 +213,8 @@ void main() {
         color += get_ray_color(ray).xyz;
     }
 
-    out_color = to_gamma(vec4(color / SAMPLES_PER_PIXEL, 1.0));
+    float weight = 1.0 / (frame + 1);
+    vec4 tex_color = texture(tex, tex_coord);
+    vec4 ray_color = to_gamma(vec4(color / SAMPLES_PER_PIXEL, 1.0));
+    out_color = mix(tex_color, ray_color, weight);
 }
