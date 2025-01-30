@@ -5,6 +5,8 @@ in vec2 tex_coord;
 
 out vec4 out_color;
 
+uniform mat4 to_world;
+
 uniform vec2 resolution;
 uniform float time;
 uniform int frame;
@@ -18,6 +20,7 @@ const int FOV = 70;
 const float MIN_DIST = 0.001;
 const float MAX_DIST = 100;
 const int SAMPLES_PER_PIXEL = 10;
+const int MAX_BOUNCE = 100;
 
 // Constants
 const float PI = 3.141592;
@@ -25,11 +28,18 @@ const float FAR = 999999999;
 
 vec3 rand_seed = vec3(frag_coord.xy, time);
 
+struct Material {
+    vec3 albedo;
+    float reflectance;
+    float specular;
+};
+
 struct HitInfo {
     vec3 p;
     vec3 normal;
     float t;
     bool front_face;
+    Material material;
 };
 
 float random() {
@@ -101,10 +111,16 @@ vec3 ray_at(Ray ray, float t) {
 struct Sphere {
     vec3 center;
     float radius;
+    Material material;
 };
 
 Sphere spheres[16];
-const int SPHERES_NUM = 2;
+const int SPHERES_NUM = 6;
+
+Sphere get_sphere(vec3 center, float radius, Material material) {
+    vec4 new_center = vec4(center, 1.0) * to_world;
+    return Sphere(new_center.xyz, radius, material);
+}
 
 float sphere_hit(Sphere sphere, Ray ray) {
     vec3 oc = sphere.center - ray.origin;
@@ -126,7 +142,7 @@ HitInfo sphere_hit_data(Sphere sphere, Ray ray, float t) {
     bool front_face = dot(ray.dir, outward_normal) < 0;
     vec3 normal = front_face ? outward_normal : -outward_normal;
 
-    return HitInfo(p, normal, t, front_face);
+    return HitInfo(p, normal, t, front_face, sphere.material);
 }
 
 /**************************************
@@ -136,9 +152,15 @@ HitInfo sphere_hit_data(Sphere sphere, Ray ray, float t) {
 struct Plane {
     vec3 normal;
     vec3 point;
+    Material material;
 };
 
 Plane plane;
+
+Plane get_plane(vec3 normal, vec3 point, Material material) {
+    vec4 new_point = vec4(point, 1.0) * to_world;
+    return Plane(normal, new_point.xyz, material);
+}
 
 float plane_hit(Plane plane, Ray ray) {
     float denom = dot(plane.normal, ray.dir);
@@ -156,13 +178,16 @@ HitInfo plane_hit_data(Plane plane, Ray ray, float t) {
     bool front_face = dot(ray.dir, plane.normal) < 0;
     vec3 normal = front_face ? plane.normal : -plane.normal;
 
-    return HitInfo(p, plane.normal, t, front_face);
+    return HitInfo(p, plane.normal, t, front_face, plane.material);
 }
 
 void trace_scene(Ray ray, inout HitInfo hit_info) {
+    float dist = MAX_DIST;
+
     float t = plane_hit(plane, ray);
-    if (MIN_DIST <= t && t < MAX_DIST) {
+    if (MIN_DIST <= t && t < dist) {
         hit_info = plane_hit_data(plane, ray, t);
+        dist = hit_info.t;
     }
 
     for (int i = 0; i < SPHERES_NUM; i++) {
@@ -170,8 +195,9 @@ void trace_scene(Ray ray, inout HitInfo hit_info) {
         float t = sphere_hit(sphere, ray);
 
         // Sphere hit
-        if (MIN_DIST <= t && t < MAX_DIST) {
+        if (MIN_DIST <= t && t < dist) {
             hit_info = sphere_hit_data(sphere, ray, t);
+            dist = hit_info.t;
         }
     }
 
@@ -185,27 +211,43 @@ HitInfo get_hit(Ray ray) {
 }
 
 vec4 get_ray_color(Ray ray) {
-    int bounces = 100;
+    vec3 new_color = vec3(1.0);
+    float probability = 1.0;
 
-    for (int i = 0; i < bounces; i++) {
+    for (int i = 0; i < MAX_BOUNCE; i++) {
         HitInfo hit_info = get_hit(ray);
 
+        // Hit!
         if (hit_info.t < MAX_DIST) {
-            vec3 dir = normalize(hit_info.normal + random_on_hemisphere(hit_info.normal));
-            ray = Ray(hit_info.p, dir);
+            Material mat = hit_info.material;
+            if (mat.reflectance > 0.0) {
+                vec3 dir = normalize(hit_info.normal + random_on_hemisphere(hit_info.normal));
+                ray = Ray(hit_info.p, dir);
+                new_color *= hit_info.material.albedo * hit_info.material.reflectance;
+            } else if (mat.specular > 0.0) {
+                vec3 dir = normalize(ray.dir - 2 * dot(ray.dir, hit_info.normal) * hit_info.normal);
+                ray = Ray(hit_info.p, dir);
+                new_color *= hit_info.material.albedo * hit_info.material.specular;
+            }
         } else {
             float a = 0.5*(ray.dir.y + 1.0);
             vec3 color = (1.0-a)*vec3(1.0, 1.0, 1.0) + a*vec3(0.5, 0.7, 1.0);
-            color *= pow(0.5, i);
-            return vec4(color, 1.0);
+            new_color *= color;
+            return vec4(new_color, 1.0);
         }
     }
+
+    return vec4(new_color, 1.0);
 }
 
 void main() {
-    plane = Plane(vec3(0.0, 1.0, 0.0), vec3(0.0, -0.51, 0.0));
-    spheres[0] = Sphere(vec3(0.0, 0.0, -2.0), 0.5);
-    spheres[1] = Sphere(vec3(3.0, 0.0, -6.0), 0.5);
+    plane = get_plane(vec3(0.0, 1.0, 0.0), vec3(0.0, -0.001, 0.0), Material(vec3(0.3, 0.7, 0.2), 1.0, 0));
+    spheres[0] = get_sphere(vec3(-1.0, 0.5, -2.0), 0.5, Material(vec3(1.0, 0.2, 1.0), 1.0, 0));
+    spheres[1] = get_sphere(vec3(-0.5, 0.5, -6.0), 0.5, Material(vec3(1.0), 1, 0));
+    spheres[2] = get_sphere(vec3(1.0, 0.5, -2.0), 0.5, Material(vec3(1.0, 1.0, 1.0), 0.0, 1.0));
+    spheres[3] = get_sphere(vec3(-0.3, 0.1, -1.0), 0.1, Material(vec3(0.7, 0.3, 0.7), 0.0, 1.0));
+    spheres[4] = get_sphere(vec3(0.15, 0.1, -1.3), 0.1, Material(vec3(0.8, 0.2, 0.1), 1.0, 0.0));
+    spheres[5] = get_sphere(vec3(0.55, 0.1, -1.55), 0.1, Material(vec3(0.1, 0.1, 0.8), 1.0, 0.0));
 
     vec3 color = vec3(0.0, 0.0, 0.0);
     for (int i = 0; i < SAMPLES_PER_PIXEL; i++) {
