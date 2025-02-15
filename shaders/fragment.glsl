@@ -159,7 +159,9 @@ Plane plane;
 
 Plane get_plane(vec3 normal, vec3 point, Material material) {
     vec4 new_point = vec4(point, 1.0) * to_world;
-    return Plane(normal, new_point.xyz, material);
+    vec3 new_normal = normal * mat3(transpose(inverse(to_world)));
+
+    return Plane(normalize(new_normal), new_point.xyz, material);
 }
 
 float plane_hit(Plane plane, Ray ray) {

@@ -49,6 +49,25 @@ Matrix4& Matrix4::rotz(GLfloat angle) {
     return *this;
 }
 
+Matrix4& Matrix4::look_at(vec3 const& pos, vec3 const& look, vec3 const& up) {
+    vec3 const f {look - pos}; 
+    vec3 const r {up.cross(f) / up.cross(f).length()};
+    vec3 const u {f.cross(r)};
+
+    Matrix4 const rot {
+        r.x, u.x, f.x, 0.0,
+        r.y, u.y, f.y, 0.0,
+        r.z, u.z, f.z, 0.0,
+        0.0, 0.0, 0.0, 1.0,
+    };
+    Matrix4 const trans {
+        Matrix4().trans(-pos.x, -pos.y, -pos.z)
+    };
+
+    *this = rot * trans;
+    return *this;
+}
+
 Matrix4 Matrix4::operator+(Matrix4 const& other) const {
     Matrix4 res {};
     std::transform(
@@ -117,6 +136,18 @@ vec3 vec3::operator/(GLfloat f) const {
     return {x / f, y / f, z / f};
 }
 
+GLfloat vec3::dot(vec3 const& other) const {
+    return x*other.x + y*other.y + z*other.z;
+}
+
+vec3 vec3::cross(vec3 const& other) const {
+    return {
+        y*other.z - z*other.y,
+        z*other.x - x*other.z,
+        x*other.y - y*other.x
+    };
+}
+
 bool vec3::operator==(vec3 const& other) const {
     return x == other.x && y == other.y && z == other.z;
 }
@@ -128,18 +159,30 @@ vec3& vec3::operator+=(vec3 const& other) {
     return *this;
 }
 
+vec3& vec3::operator-=(vec3 const& other) {
+    x -= other.x;
+    y -= other.y;
+    z -= other.z;
+    return *this;
+}
+
 bool vec3::is_zero() const {
     vec3 const zero {0.0, 0.0, 0.0};
     return *this == zero;
 }
 
-vec3& vec3::normalize() {
-    double l = std::sqrt(x*x + y*y + z*z);
+GLfloat vec3::length() const {
+    return std::sqrt(x*x + y*y + z*z);
+}
+
+vec3 vec3::normalize() {
+    double l = length();
     // Only normalize if not 0
-    if (l > 1e-6) {
-        *this = *this / l;
+    if (l < 1e-6) {
+        std::cerr << "Don't normalize a zero vector silly :3" << std::endl;
+        return *this;
     }
-    return *this;
+    return *this / l;
 }
 
 std::ostream &operator<<(std::ostream &os, vec3 const &v) {
