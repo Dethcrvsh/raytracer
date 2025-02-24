@@ -115,8 +115,10 @@ struct Sphere {
     Material material;
 };
 
-Sphere spheres[16];
-const int SPHERES_NUM = 6;
+layout(std140) uniform sphere_buffer {
+    Sphere spheres[16];
+};
+uniform int SPHERES_NUM;
 
 Sphere get_sphere(vec3 center, float radius, Material material) {
     return Sphere(center, radius, material);
@@ -241,12 +243,12 @@ vec4 get_ray_color(Ray ray) {
 
 void main() {
     plane = get_plane(vec3(0.0, 1.0, 0.0), vec3(0.0, -0.001, 0.0), Material(vec3(0.3, 0.7, 0.2), 1.0, 0));
-    spheres[0] = get_sphere(vec3(-1.0, 0.5, -2.0), 0.5, Material(vec3(1.0, 0.2, 1.0), 1.0, 0));
-    spheres[1] = get_sphere(vec3(-0.5, 0.5, -6.0), 0.5, Material(vec3(1.0), 1, 0));
-    spheres[2] = get_sphere(vec3(1.0, 0.5, -2.0), 0.5, Material(vec3(1.0, 1.0, 1.0), 0.0, 1.0));
-    spheres[3] = get_sphere(vec3(-0.3, 0.1, -1.0), 0.1, Material(vec3(0.7, 0.3, 0.7), 0.0, 1.0));
-    spheres[4] = get_sphere(vec3(0.15, 0.1, -1.3), 0.1, Material(vec3(0.8, 0.2, 0.1), 1.0, 0.0));
-    spheres[5] = get_sphere(vec3(0.55, 0.1, -1.55), 0.1, Material(vec3(0.1, 0.1, 0.8), 1.0, 0.0));
+    // spheres[0] = get_sphere(vec3(-1.0, 0.5, -2.0), 0.5, Material(vec3(1.0, 0.2, 1.0), 1.0, 0));
+    // spheres[1] = get_sphere(vec3(-0.5, 0.5, -6.0), 0.5, Material(vec3(1.0), 1, 0));
+    // spheres[2] = get_sphere(vec3(1.0, 0.5, -2.0), 0.5, Material(vec3(1.0, 1.0, 1.0), 0.0, 1.0));
+    // spheres[3] = get_sphere(vec3(-0.3, 0.1, -1.0), 0.1, Material(vec3(0.7, 0.3, 0.7), 0.0, 1.0));
+    // spheres[4] = get_sphere(vec3(0.15, 0.1, -1.3), 0.1, Material(vec3(0.8, 0.2, 0.1), 1.0, 0.0));
+    // spheres[5] = get_sphere(vec3(0.55, 0.1, -1.55), 0.1, Material(vec3(0.1, 0.1, 0.8), 1.0, 0.0));
 
     vec3 color = vec3(0.0, 0.0, 0.0);
     for (int i = 0; i < SAMPLES_PER_PIXEL; i++) {

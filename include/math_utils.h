@@ -44,6 +44,7 @@ struct vec3 {
     GLfloat z;
 
     vec3() = default;
+    vec3(GLfloat x, GLfloat y, GLfloat z) : x {x}, y {y}, z {z} {};
     ~vec3() = default;
 
     vec3(vec3 const& other) = default;

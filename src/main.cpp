@@ -1,15 +1,9 @@
 #include "gl.h"
 #include "model.h"
+#include "tracer_objects.h"
 #include <GLFW/glfw3.h>
 #include "math_utils.h"
 #include <cmath>
-
-struct Test {
-    GLfloat x;
-    GLfloat y;
-    GLfloat z;
-    GLfloat w;
-};
 
 GLFWwindow* window;
 
@@ -28,6 +22,7 @@ double last_time;
 
 // Graphics objects
 Model render_base;
+GLArray<Sphere, 16> spheres {};
 
 struct Camera {
     vec3 pos {0.0, 0.5, 0.0};
@@ -112,6 +107,8 @@ void main_loop() {
     fbo_current.use();
     glUseProgram(program);
 
+    spheres.upload();
+
     // Update the camera on movement
     if (move_camera(camera, delta)) {
         // Reset the fbo to not get blurry frames
@@ -186,6 +183,17 @@ int main() {
 
     render_base = init_render_base();
     last_time = glfwGetTime();
+    
+    // Bind the GLArray to the correct buffers
+    spheres.bind(program, "sphere_buffer");
+    spheres.bind_size(program, "SPHERES_NUM");
+
+    spheres.add({vec3(-1.0, 0.5, -2.0), 0.5, {{1.0, 0.2, 1.0}, 1.0, 0}});
+    spheres.add({vec3(-0.5, 0.5, -6.0), 0.5, Material(vec3(1.0, 1.0, 1.0), 1, 0)});
+    spheres.add({vec3(1.0, 0.5, -2.0), 0.5, Material(vec3(1.0, 1.0, 1.0), 0.0, 1.0)});
+    spheres.add({vec3(-0.3, 0.1, -1.0), 0.1, Material(vec3(0.7, 0.3, 0.7), 0.0, 1.0)});
+    spheres.add({vec3(0.15, 0.1, -1.3), 0.1, Material(vec3(0.8, 0.2, 0.1), 1.0, 0.0)});
+    spheres.add({vec3(0.55, 0.1, -1.55), 0.1, Material(vec3(0.1, 0.1, 0.8), 1.0, 0.0)});
 
     GL::run_loop(window, main_loop);
 }
