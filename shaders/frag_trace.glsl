@@ -5,7 +5,7 @@ in vec2 tex_coord;
 
 out vec4 out_color;
 
-uniform mat4 to_world;
+uniform mat4 view_matrix;
 
 uniform vec2 resolution;
 uniform float time;
@@ -90,8 +90,9 @@ Ray ray_create() {
     offset.y /= resolution.x;
     float aspect_ratio = resolution.x / resolution.y;
     float dist = 1.0 / tan(FOV * 0.5 * PI / 180.0);
-    vec3 ray_pos = vec3(0.0, 0.0, 0.0);
+    vec3 ray_pos = vec3(vec4(0.0, 0.0, 0.0, 1.0) * view_matrix);
     vec3 ray_target = vec3(frag_coord.x * aspect_ratio + offset.x, frag_coord.y + offset.y, -dist);
+    ray_target = vec3(vec4(ray_target, 1.0) * view_matrix);
     vec3 ray_dir = normalize(ray_target - ray_pos);
 
     return Ray (
@@ -118,8 +119,7 @@ Sphere spheres[16];
 const int SPHERES_NUM = 6;
 
 Sphere get_sphere(vec3 center, float radius, Material material) {
-    vec4 new_center = vec4(center, 1.0) * to_world;
-    return Sphere(new_center.xyz, radius, material);
+    return Sphere(center, radius, material);
 }
 
 float sphere_hit(Sphere sphere, Ray ray) {
@@ -158,10 +158,7 @@ struct Plane {
 Plane plane;
 
 Plane get_plane(vec3 normal, vec3 point, Material material) {
-    vec4 new_point = vec4(point, 1.0) * to_world;
-    vec3 new_normal = normal * mat3(transpose(inverse(to_world)));
-
-    return Plane(normalize(new_normal), new_point.xyz, material);
+    return Plane(normal, point, material);
 }
 
 float plane_hit(Plane plane, Ray ray) {

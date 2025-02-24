@@ -4,6 +4,13 @@
 #include "math_utils.h"
 #include <cmath>
 
+struct Test {
+    GLfloat x;
+    GLfloat y;
+    GLfloat z;
+    GLfloat w;
+};
+
 GLFWwindow* window;
 
 // OpenGL variables
@@ -29,9 +36,9 @@ struct Camera {
 
     Matrix4 to_matrix() {
         vec3 const up {0.0, 1.0, 0.0};
-        Matrix4 rot = Matrix4().rotx(pitch) * Matrix4().roty(yaw);
-        Matrix4 trans = Matrix4().trans(-pos.x, -pos.y, -pos.z);
-        return rot * trans;
+        Matrix4 rot = Matrix4().roty(-yaw) * Matrix4().rotx(-pitch);
+        Matrix4 trans = Matrix4().trans(pos.x, pos.y, pos.z);
+        return trans * rot;
     }
 } camera;
 
@@ -63,7 +70,7 @@ bool move_camera(Camera& cam, double delta) {
 
     if (!dir.is_zero()) {
         dir = dir.normalize();
-        cam.pos += dir.normalize() * MOVEMENT_SPEED * delta;
+        cam.pos += dir * MOVEMENT_SPEED * delta;
         moved = true;
     }
 
@@ -74,7 +81,6 @@ bool move_camera(Camera& cam, double delta) {
     }
     if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS) {
         double new_yaw {cam.yaw + LOOK_SPEED * delta};
-        new_yaw += 2*3.1415; // Make sure to never go into the negative
         cam.yaw = std::fmod(new_yaw, 2*3.1415);
         moved = true;
     }
@@ -129,7 +135,7 @@ void main_loop() {
         glGetUniformLocation(program, "frame"),
         frame
     );
-    camera.to_matrix().upload(program, "to_world");
+    camera.to_matrix().upload(program, "view_matrix");
 
     // Do the tracing of rays!
     render_base.draw(program, "in_position", "", "in_tex_coord");
@@ -173,7 +179,7 @@ Model init_render_base() {
 int main() {
     // Initialize OpenGL
     window = GL::init();
-    program = GL::create_program("vert_pass.glsl", "fragment.glsl");
+    program = GL::create_program("vert_pass.glsl", "frag_trace.glsl");
     tex_program = GL::create_program("vert_pass.glsl", "frag_tex.glsl");
     fbo_current = GL::create_fbo();
     fbo_prev = GL::create_fbo();

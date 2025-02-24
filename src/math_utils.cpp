@@ -167,22 +167,20 @@ vec3& vec3::operator-=(vec3 const& other) {
 }
 
 bool vec3::is_zero() const {
-    vec3 const zero {0.0, 0.0, 0.0};
-    return *this == zero;
+    return length() < 1e-6;
 }
 
 GLfloat vec3::length() const {
     return std::sqrt(x*x + y*y + z*z);
-}
+ }
 
 vec3 vec3::normalize() {
-    double l = length();
     // Only normalize if not 0
-    if (l < 1e-6) {
+    if (is_zero()) {
         std::cerr << "Don't normalize a zero vector silly :3" << std::endl;
         return *this;
     }
-    return *this / l;
+    return *this / length();
 }
 
 std::ostream &operator<<(std::ostream &os, vec3 const &v) {
