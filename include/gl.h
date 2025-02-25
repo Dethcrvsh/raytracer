@@ -56,36 +56,48 @@ public:
         size_var = glGetUniformLocation(program, size_name.c_str());
     }
 
-    T operator[](size_t index) const {
-        return array[index];
+    void upload() const {
+        glBindBuffer(GL_UNIFORM_BUFFER, ubo);
+        glBufferSubData(GL_UNIFORM_BUFFER, 0, MAX_SIZE * sizeof(T), this->data());
+
+        if (size_var != -1) {
+            glUniform1i(size_var, this->size());
+        }
     }
 
     T& operator[](size_t index) {
         return array[index];
     }
 
-    void add(T const& elem) {
-        assert(array.size() < MAX_SIZE);
-        array.push_back(elem);
+    T const& operator[](size_t index) const {
+        return array[index];
     }
 
-    void erase(size_t index) {
-        array.erase(array.begin() + index);
+    void fill(T const& value) {
+        array.fill(value);
     }
 
-    void upload() const {
-        glBindBuffer(GL_UNIFORM_BUFFER, ubo);
-        glBufferSubData(GL_UNIFORM_BUFFER, 0, array.size() * sizeof(T), array.data());
-
-        if (size_var != -1) {
-            glUniform1i(size_var, array.size());
-        }
+    bool empty() const {
+        return array.empty();
     }
+
+    size_t size() const {
+        return array.size();
+    }
+
+    T* data() {
+        return array.data();
+    }
+
+    T const* data() const {
+        return array.data();
+    }
+
 
 private:
     GLuint ubo;
     GLuint program;
     GLint size_var {-1};
     std::string block_name;
-    std::vector<T> array {};
+    std::array<T, MAX_SIZE> array {};
 };

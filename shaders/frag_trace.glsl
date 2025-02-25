@@ -19,7 +19,7 @@ const int FOV = 70;
 // Ray
 const float MIN_DIST = 0.001;
 const float MAX_DIST = 100;
-const int SAMPLES_PER_PIXEL = 200;
+const int SAMPLES_PER_PIXEL = 10;
 const int MAX_BOUNCE = 100;
 
 // Constants

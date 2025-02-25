@@ -24,15 +24,15 @@ namespace Renderer {
         state.spheres.bind(state.program, "sphere_buffer");
         state.spheres.bind_size(state.program, "SPHERES_NUM");
 
-        state.spheres.add(
+        state.spheres[0] = 
             Sphere(vec3(-1.0, 0.5, -2.0), 0.5,
-                   Material().lambertian(vec3(1.0, 0.2, 1.0), 1.0))
-        );
+                   Material().lambertian(vec3(1.0, 0.2, 1.0), 1.0));
+        
 
-        state.spheres.add(
-            Sphere(vec3(1.0, 0.5, -2.0), 0.5,
-                   Material().metal(vec3(1.0, 1.0, 1.0), 1.0, 1.0))
-        );
+        // state.spheres.add(
+        //     Sphere(vec3(1.0, 0.5, -2.0), 0.5,
+        //            Material().metal(vec3(1.0, 1.0, 1.0), 1.0, 1.0))
+        // );
 
         // state.spheres.add({vec3(-0.5, 0.5, -6.0), 0.5, Material(vec3(1.0, 1.0, 1.0), 1, 0)});
         // state.spheres.add({vec3(1.0, 0.5, -2.0), 0.5, Material(vec3(1.0, 1.0, 1.0), 0.0, 1.0)});

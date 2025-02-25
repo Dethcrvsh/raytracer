@@ -16,6 +16,7 @@ struct Sphere {
     vec3 center;
     GLfloat radius;
     Material material;
-
+    
+    Sphere() = default;
     Sphere(vec3 const& center, GLfloat radius, Material const& material);
 };
