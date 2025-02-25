@@ -4,10 +4,12 @@ struct Material {
     vec3 albedo;
     GLfloat reflectance;
     GLfloat specular;
-    GLfloat pad1, pad2, pad3;
+    GLfloat fuzz;
+    GLfloat pad1, pad2;
 
-    Material(vec3 const &albedo, GLfloat reflectance, GLfloat specular)
-    : albedo{albedo}, reflectance{reflectance}, specular{specular} {};
+    Material() = default;
+    Material& lambertian(vec3 const& albedo, GLfloat reflectance);
+    Material& metal(vec3 const& albedo, GLfloat specular, GLfloat fuzz);
 };
 
 struct Sphere {
@@ -15,6 +17,5 @@ struct Sphere {
     GLfloat radius;
     Material material;
 
-    Sphere(vec3 const &center, GLfloat radius, Material const &material)
-    : center{center}, radius{radius}, material{material} {};
+    Sphere(vec3 const& center, GLfloat radius, Material const& material);
 };

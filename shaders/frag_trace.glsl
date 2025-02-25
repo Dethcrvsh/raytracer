@@ -19,7 +19,7 @@ const int FOV = 70;
 // Ray
 const float MIN_DIST = 0.001;
 const float MAX_DIST = 100;
-const int SAMPLES_PER_PIXEL = 10;
+const int SAMPLES_PER_PIXEL = 200;
 const int MAX_BOUNCE = 100;
 
 // Constants
@@ -32,6 +32,7 @@ struct Material {
     vec3 albedo;
     float reflectance;
     float specular;
+    float fuzz;
 };
 
 struct HitInfo {
@@ -221,15 +222,21 @@ vec4 get_ray_color(Ray ray) {
         // Hit!
         if (hit_info.t < MAX_DIST) {
             Material mat = hit_info.material;
+
+            // Lambertian reflectance
             if (mat.reflectance > 0.0) {
                 vec3 dir = normalize(hit_info.normal + random_on_hemisphere(hit_info.normal));
                 ray = Ray(hit_info.p, dir);
                 new_color *= hit_info.material.albedo * hit_info.material.reflectance;
+
+            // Metal reflectance
             } else if (mat.specular > 0.0) {
                 vec3 dir = normalize(ray.dir - 2 * dot(ray.dir, hit_info.normal) * hit_info.normal);
+                dir += mat.fuzz * vec3_random();
                 ray = Ray(hit_info.p, dir);
                 new_color *= hit_info.material.albedo * hit_info.material.specular;
             }
+
         } else {
             float a = 0.5*(ray.dir.y + 1.0);
             vec3 color = (1.0-a)*vec3(1.0, 1.0, 1.0) + a*vec3(0.5, 0.7, 1.0);
@@ -242,13 +249,7 @@ vec4 get_ray_color(Ray ray) {
 }
 
 void main() {
-    plane = get_plane(vec3(0.0, 1.0, 0.0), vec3(0.0, -0.001, 0.0), Material(vec3(0.3, 0.7, 0.2), 1.0, 0));
-    // spheres[0] = get_sphere(vec3(-1.0, 0.5, -2.0), 0.5, Material(vec3(1.0, 0.2, 1.0), 1.0, 0));
-    // spheres[1] = get_sphere(vec3(-0.5, 0.5, -6.0), 0.5, Material(vec3(1.0), 1, 0));
-    // spheres[2] = get_sphere(vec3(1.0, 0.5, -2.0), 0.5, Material(vec3(1.0, 1.0, 1.0), 0.0, 1.0));
-    // spheres[3] = get_sphere(vec3(-0.3, 0.1, -1.0), 0.1, Material(vec3(0.7, 0.3, 0.7), 0.0, 1.0));
-    // spheres[4] = get_sphere(vec3(0.15, 0.1, -1.3), 0.1, Material(vec3(0.8, 0.2, 0.1), 1.0, 0.0));
-    // spheres[5] = get_sphere(vec3(0.55, 0.1, -1.55), 0.1, Material(vec3(0.1, 0.1, 0.8), 1.0, 0.0));
+    plane = get_plane(vec3(0.0, 1.0, 0.0), vec3(0.0, -0.001, 0.0), Material(vec3(0.3, 0.7, 0.2), 1.0, 0, 0));
 
     vec3 color = vec3(0.0, 0.0, 0.0);
     for (int i = 0; i < SAMPLES_PER_PIXEL; i++) {

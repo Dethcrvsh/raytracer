@@ -4,7 +4,6 @@
 #include "model.h"
 #include "tracer_objects.h"
 
-
 namespace Renderer {
     struct State {
         GLFWwindow* window;
