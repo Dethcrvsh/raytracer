@@ -249,7 +249,7 @@ vec4 get_ray_color(Ray ray) {
 }
 
 void main() {
-    plane = get_plane(vec3(0.0, 1.0, 0.0), vec3(0.0, -0.001, 0.0), Material(vec3(0.3, 0.7, 0.2), 1.0, 0, 0));
+    plane = get_plane(vec3(0.0, 1.0, 0.0), vec3(0.0, -0.001, 0.0), Material(vec3(0.86, 0.95, 0.99), 0.0, 1.0, 0.0));
 
     vec3 color = vec3(0.0, 0.0, 0.0);
     for (int i = 0; i < SAMPLES_PER_PIXEL; i++) {

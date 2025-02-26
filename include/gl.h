@@ -33,6 +33,7 @@ public:
     void bind(GLuint program, std::string const& block_name) {
         this->program = program;
         this->block_name = block_name;
+        this->binding_point = next_binding_point++;
 
         // Create a uniform buffer object
         glGenBuffers(1, &ubo);
@@ -46,9 +47,9 @@ public:
         GLuint const block_index = glGetUniformBlockIndex(program, block_name.c_str());
 
         // Bind the buffer to a binding point
-        glBindBufferBase(GL_UNIFORM_BUFFER, 0, ubo);
+        glBindBufferBase(GL_UNIFORM_BUFFER, binding_point, ubo);
 
-        glUniformBlockBinding(program, block_index, 0);
+        glUniformBlockBinding(program, block_index, binding_point);
     }
 
     /* Bind to a variable that will track the size of the array */
@@ -58,46 +59,76 @@ public:
 
     void upload() const {
         glBindBuffer(GL_UNIFORM_BUFFER, ubo);
-        glBufferSubData(GL_UNIFORM_BUFFER, 0, MAX_SIZE * sizeof(T), this->data());
+        glBufferSubData(GL_UNIFORM_BUFFER, 0, vector.size() * sizeof(T), vector.data());
 
         if (size_var != -1) {
-            glUniform1i(size_var, this->size());
+            glUniform1i(size_var, vector.size());
         }
     }
 
+    T& at(size_t index) {
+        return vector.at(index);
+    }
+
+    T const& at(size_t index) const {
+        return vector.at(index);
+    }
+
     T& operator[](size_t index) {
-        return array[index];
+        assert(index < MAX_SIZE);
+        return vector[index];
     }
 
     T const& operator[](size_t index) const {
-        return array[index];
-    }
-
-    void fill(T const& value) {
-        array.fill(value);
+        assert(index < MAX_SIZE);
+        return vector[index];
     }
 
     bool empty() const {
-        return array.empty();
+        return vector.empty();
     }
 
     size_t size() const {
-        return array.size();
+        return vector.size();
     }
 
-    T* data() {
-        return array.data();
+    size_t max_size() const {
+        return MAX_SIZE;
     }
 
-    T const* data() const {
-        return array.data();
+    void clear() {
+        vector.clear();
     }
 
+    void erase(size_t index) {
+        vector.erase(vector.begin() + index);
+    }
+
+    void push_back(T const& value) {
+        assert(vector.size() < MAX_SIZE);
+        vector.push_back(value);
+    } 
+
+    void push_back(T&& value) {
+        vector.push_back(std::forward<T>(value));
+    }
+
+    void pop_back() {
+        vector.pop_back();
+    }
+
+    // TODO: Remove
+    GLuint b() {
+        return binding_point;
+    }
 
 private:
+    inline static GLuint next_binding_point {};
+
     GLuint ubo;
     GLuint program;
+    GLuint binding_point;
     GLint size_var {-1};
     std::string block_name;
-    std::array<T, MAX_SIZE> array {};
+    std::vector<T> vector {};
 };
