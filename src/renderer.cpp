@@ -12,14 +12,13 @@ namespace Renderer {
         state.render_base = create_fullscreen_quad();
         state.last_time = glfwGetTime();
 
-        state.uniforms.resolution =
-            glGetUniformLocation(state.program, "resolution");
+        state.uniforms.resolution = glGetUniformLocation(state.program, "resolution");
         state.uniforms.time = glGetUniformLocation(state.program, "time");
         state.uniforms.frame = glGetUniformLocation(state.program, "frame");
-        state.uniforms.view_matrix =
-            glGetUniformLocation(state.program, "view_matrix");
+        state.uniforms.view_matrix = glGetUniformLocation(state.program, "view_matrix");
+        state.uniforms.fov = glGetUniformLocation(state.program, "FOV");
 
-        state.camera = Camera({0.0, 0.5, 0.0});
+        state.camera = Camera({0.0, 0.5, 0.0}, 70);
 
         // Bind the GLArray to the correct buffers
         state.spheres.bind(state.program, "sphere_buffer");
@@ -34,13 +33,30 @@ namespace Renderer {
                    Material().metal(vec3(1.0, 1.0, 1.0), 1.0, 0.0))
         );
 
-        // state.spheres.add({vec3(-0.5, 0.5, -6.0), 0.5,
-        // Material(vec3(1.0, 1.0, 1.0), 1, 0)}); state.spheres.add({vec3(1.0, 0.5,
-        // -2.0), 0.5, Material(vec3(1.0, 1.0, 1.0), 0.0, 1.0)});
-        // state.spheres.add({vec3(-0.3, 0.1, -1.0), 0.1, Material(vec3(0.7, 0.3,
-        // 0.7), 0.0, 1.0)}); state.spheres.add({vec3(0.15, 0.1, -1.3), 0.1,
-        // Material(vec3(0.8, 0.2, 0.1), 1.0, 0.0)}); state.spheres.add({vec3(0.55,
-        // 0.1, -1.55), 0.1, Material(vec3(0.1, 0.1, 0.8), 1.0, 0.0)});
+        state.spheres.push_back(
+            Sphere(vec3(-0.5, 0.5, -6.0), 0.5,
+                   Material().metal(vec3(1.0, 1.0, 1.0), 1.0, 0.0))
+        );
+
+        state.spheres.push_back(
+            Sphere(vec3(-0.3, 0.1, -1.0), 0.1,
+                   Material().lambertian(vec3(0.3, 0.7, 0.3), 1.0))
+        );
+
+        state.spheres.push_back(
+            Sphere(vec3(-0.1, 0.1, -1.2), 0.1,
+                   Material().lambertian(vec3(0.7, 0.3, 0.3), 1.0))
+        );
+
+        state.spheres.push_back(
+            Sphere(vec3(0.3, 0.1, -1.1), 0.1,
+                   Material().lambertian(vec3(0.3, 0.3, 0.7), 1.0))
+        );
+
+        state.spheres.push_back(
+            Sphere(vec3(0.0, 0.25, -2.1), 0.25,
+                   Material().metal(vec3(0.3, 0.3, 0.7), 1.0, 0.2))
+        );
 
         GL::run_loop(state.window, update);
     }
@@ -75,6 +91,7 @@ namespace Renderer {
         glUniform1f(state.uniforms.time, glfwGetTime());
         glUniform1i(state.uniforms.frame, state.frame);
         state.camera.to_matrix().upload(state.program, "view_matrix");
+        glUniform1i(state.uniforms.fov, state.camera.fov);
 
         // Do the tracing of rays!
         state.render_base.draw(state.program, "in_position", "", "in_tex_coord");

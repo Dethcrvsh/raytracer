@@ -19,6 +19,7 @@ namespace Renderer {
             GLint time;
             GLint frame;
             GLint view_matrix;
+            GLint fov;
         } uniforms;
 
         // Frame buffer objects

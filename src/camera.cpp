@@ -1,7 +1,8 @@
 #include "camera.h"
+#include <algorithm>
 #include <cmath>
 
-Camera::Camera(vec3 const& pos) : pos{pos} {};
+Camera::Camera(vec3 const& pos, GLint fov) : pos{pos}, fov{fov} {};
 
 Matrix4 Camera::to_matrix() const {
     vec3 const up{0.0, 1.0, 0.0};
@@ -30,6 +31,15 @@ bool Camera::move(GLFWwindow* const window, double const delta) {
         dir += up;
     if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS)
         dir -= up;
+
+    if (glfwGetKey(window, GLFW_KEY_R) == GLFW_PRESS) {
+        fov = std::clamp(fov + 1, FOV_MIN, FOV_MAX);
+        moved = true;
+    }
+    if (glfwGetKey(window, GLFW_KEY_F) == GLFW_PRESS) {
+        fov = std::clamp(fov - 1, FOV_MIN, FOV_MAX);
+        moved = true;
+    }
 
     if (!dir.is_zero()) {
         dir = dir.normalize();
