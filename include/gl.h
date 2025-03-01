@@ -33,6 +33,7 @@ public:
     void bind(GLuint program, std::string const& block_name) {
         this->program = program;
         this->block_name = block_name;
+        // WARN: This is absolutely not thread safe
         this->binding_point = next_binding_point++;
 
         // Create a uniform buffer object

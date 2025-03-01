@@ -60,12 +60,12 @@ bool Camera::move(GLFWwindow* const window, double const delta) {
 
     if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS) {
         double new_pitch{pitch - LOOK_SPEED * delta};
-        pitch = new_pitch;
+        pitch = std::max(new_pitch, -M_PI/2);
         moved = true;
     }
     if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS) {
         double new_pitch{pitch + LOOK_SPEED * delta};
-        pitch = new_pitch;
+        pitch = std::min(new_pitch, M_PI/2);
         moved = true;
     }
 
