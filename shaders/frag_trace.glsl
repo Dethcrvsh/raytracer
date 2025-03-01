@@ -28,18 +28,12 @@ const float FAR = 999999999;
 /* ================================================================ *
                         UTILITY FUNCTIONS
 /* ================================================================ * 
-                        UTILITY FUNCTIONS
-*  ================================================================ */
 
 vec3 rand_seed = vec3(frag_coord.xy, time);
 
 /*
  * random - Generate a random float
-
- * Returns: A floating point value within [0.0, 1.0)
-/*
- * random - Generate a random float
-
+ *
  * Returns: A floating point value within [0.0, 1.0)
  */
 float random() {
@@ -51,11 +45,7 @@ float random() {
 
 /*
  * random - Generate a random float
-
- * Returns: A floating point value within [min, max)
-/*
- * random - Generate a random float
-
+ *
  * Returns: A floating point value within [min, max)
  */
 float random(const float min, const float max) {
@@ -64,21 +54,13 @@ float random(const float min, const float max) {
 
 /*
  * sample_square - Generate a random point in a square
-
- * Returns: A vec2 within [-0.5, 0.5)
-/*
- * sample_square - Generate a random point in a square
-
+ *
  * Returns: A vec2 within [-0.5, 0.5)
  */
 vec2 sample_square() {
     return vec2(random() - 0.5, random() - 0.5);
 }
 
-/*
- * vec3_random - Generate a random unit vector
- *
- * Returns: A vec3 unit vector
 /*
  * vec3_random - Generate a random unit vector
  *
@@ -98,12 +80,6 @@ vec3 vec3_random() {
  * @normal: The hemisphere's normal vector
  *
  * Returns: A vec3 unit vector
-/*
- * random_on_hemisphere - Generate a random unit vector from a hemisphere
- *
- * @normal: The hemisphere's normal vector
- *
- * Returns: A vec3 unit vector
  */
 vec3 random_on_hemisphere(const vec3 normal) {
     vec3 dir = vec3_random();
@@ -115,18 +91,12 @@ vec3 random_on_hemisphere(const vec3 normal) {
  * to_gamma - Translate color into gamma space
  *
  * Returns: vec4 color
-/*
- * to_gamma - Translate color into gamma space
- *
- * Returns: vec4 color
  */
 vec4 to_gamma(const vec4 color) {
     return vec4(sqrt(color.r), sqrt(color.g), sqrt(color.b), color.b);
 }
 
 /* ================================================================ *
- *                        TRACING STRUCTS                           *
-/* ================================================================ * 
  *                        TRACING STRUCTS                           *
  * ================================================================ */
 
@@ -147,8 +117,6 @@ struct HitInfo {
 
 /* ================================================================ *
  *                         RAY FUNCTIONS                            *
-/* ================================================================ * 
- *                         RAY FUNCTIONS                            *
  * ================================================================ */
 
 struct Ray {
@@ -156,10 +124,6 @@ struct Ray {
     vec3 dir;
 };
 
-/* ray_create - Create a random ray from the camera to the fragment
- *              position in the tracing plane
- *
- * Returns: 3D Ray
 /* ray_create - Create a random ray from the camera to the fragment
  *              position in the tracing plane
  *
@@ -189,21 +153,12 @@ Ray ray_create() {
  * @t: The distance
  *
  * Returns: vec3 position
-/*
- * ray_at - Calculate position of the ray at a specific distance
- *
- * @ray: The ray
- * @t: The distance
- *
- * Returns: vec3 position
  */
 vec3 ray_at(Ray ray, float t) {
     return ray.origin + t * ray.dir;
 }
 
 /* ================================================================ *
- *                      SPHERE FUNCTIONS                            *
-/* ================================================================ * 
  *                      SPHERE FUNCTIONS                            *
  * ================================================================ */
 
@@ -228,26 +183,11 @@ layout(std140) uniform sphere_buffer {
  * @Material: Material of the sphere
  *
  * Returns: A struct Sphere
-/*
- * get_sphere - Create a struct Sphere
- *
- * @center: The center point in 3D space
- * @radius: Sphere radius
- * @Material: Material of the sphere
- *
- * Returns: A struct Sphere
  */
 Sphere get_sphere(vec3 center, float radius, Material material) {
     return Sphere(center, radius, material);
 }
 
-/*
- * sphere_hit - Calculate the intersection between a sphere and ray
- *
- * @sphere
- * @ray
- *
- * Returns: Floating point distance from ray origin
 /*
  * sphere_hit - Calculate the intersection between a sphere and ray
  *
@@ -278,14 +218,6 @@ float sphere_hit(Sphere sphere, Ray ray) {
  * @t: The intersection distance
  *
  * Returns: A struct Hitdata
-/*
- * sphere_hit_data - Get the hit related information from an intersecting sphere and ray
- *
- * @sphere
- * @ray
- * @t: The intersection distance
- *
- * Returns: A struct Hitdata
  */
 HitInfo sphere_hit_data(Sphere sphere, Ray ray, float t) {
     vec3 p = ray_at(ray, t);
@@ -297,8 +229,6 @@ HitInfo sphere_hit_data(Sphere sphere, Ray ray, float t) {
 }
 
 /* ================================================================ *
- *                      PLANE FUNCTIONS                             *
-/* ================================================================ * 
  *                      PLANE FUNCTIONS                             *
  * ================================================================ */
 
@@ -318,27 +248,11 @@ Plane plane;
  * @Material: Material of the plane
  *
  * Returns: A struct Plane
-/*
- * get_plane - Create a struct Plane
- *
- * @normal: The plane normal vector
- * @point: A point on the plane
- * @Material: Material of the plane
- *
- * Returns: A struct Plane
  */
 Plane get_plane(vec3 normal, vec3 point, Material material) {
     return Plane(normal, point, material);
 }
 
-/*
- * plane_hit - Get the hit related information from an intersecting sphere and ray
- *
- * @sphere
- * @ray
- * @t: The intersection distance
- *
- * Returns: A struct Hitdata
 /*
  * plane_hit - Get the hit related information from an intersecting sphere and ray
  *
@@ -367,14 +281,6 @@ float plane_hit(Plane plane, Ray ray) {
  * @t: The intersection distance
  *
  * Returns: A struct Hitdata
-/*
- * plane_hit_data - Get the hit related information from an intersecting plane and ray
- *
- * @plane
- * @ray
- * @t: The intersection distance
- *
- * Returns: A struct Hitdata
  */
 HitInfo plane_hit_data(Plane plane, Ray ray, float t) {
     vec3 p = ray_at(ray, t);
@@ -386,17 +292,8 @@ HitInfo plane_hit_data(Plane plane, Ray ray, float t) {
 
 /* ================================================================ *
  *                      TRACING FUNCTIONS                           *
-/* ================================================================ * 
- *                      TRACING FUNCTIONS                           *
  * ================================================================ */
 
-/*
- * trace_scene - Trace a scene along a ray and return what it hit
- *
- * @ray
- * @hit_info: Information about what the ray hit
- *
- * Return: struct HitInfo (returned through argument)
 /*
  * trace_scene - Trace a scene along a ray and return what it hit
  *
@@ -434,12 +331,6 @@ void trace_scene(Ray ray, inout HitInfo hit_info) {
  * @ray
  *
  * Returns: A struct HitInfo
-/*
- * get_hit - Get the hit where a ray intersects an object
- *
- * @ray
- *
- * Returns: A struct HitInfo
  */
 HitInfo get_hit(Ray ray) {
     HitInfo hit_info;
@@ -457,12 +348,6 @@ vec3 metal_reflectance(HitInfo hit_info, Ray ray) {
            hit_info.material.fuzz * vec3_random();
 }
 
-/*
- * get_ray_color - Get the color of an intersecting ray
- *
- * @ray
- *
- * Returns: vec4 color
 /*
  * get_ray_color - Get the color of an intersecting ray
  *
