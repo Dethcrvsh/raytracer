@@ -13,7 +13,7 @@ GLFWwindow* init() {
     }
 
     // Create a windowed mode window and its OpenGL context
-    GLFWwindow* const window {glfwCreateWindow(WIDTH, HEIGHT, "OpenGL Test", nullptr, nullptr)};
+    GLFWwindow* const window {glfwCreateWindow(WIDTH, HEIGHT, "Raytracer", nullptr, nullptr)};
     if (!window) {
         std::cerr << "Failed to create GLFW window" << std::endl;
         glfwTerminate();

@@ -5,31 +5,100 @@ in vec2 tex_coord;
 
 out vec4 out_color;
 
-uniform mat4 view_matrix;
+uniform vec2 resolution; // The screen resolution
+uniform float time; // Time elapsed since program start
+uniform int frame; // Current frame count, used to blend frames
 
-uniform vec2 resolution;
-uniform float time;
-uniform int frame;
-
-uniform sampler2D tex;
+uniform sampler2D prev_frame_tex; // The previous frame as a texture
 
 // Camera
 uniform int FOV;
-
-// // Camera
-// const int FOV = 70;
+uniform mat4 view_matrix; // Transform the camera
 
 // Ray
 const float MIN_DIST = 0.001;
 const float MAX_DIST = 100;
-const int SAMPLES_PER_PIXEL = 10;
+const int SAMPLES_PER_PIXEL = 25;
 const int MAX_BOUNCE = 100;
 
 // Constants
 const float PI = 3.141592;
 const float FAR = 999999999;
 
+/* ================================================================ * 
+                        UTILITY FUNCTIONS
+*  ================================================================ */
+
 vec3 rand_seed = vec3(frag_coord.xy, time);
+
+/*
+ * random - Generate a random float
+
+ * Returns: A floating point value within [0.0, 1.0)
+ */
+float random() {
+    rand_seed = vec3(rand_seed.xy, rand_seed.z + 3.837);
+    vec3 scale = vec3(12.9898, 78.233, 45.164);
+    float dot_product = dot(rand_seed, scale);
+    return fract(sin(dot_product) * 43758.5453);
+}
+
+/*
+ * random - Generate a random float
+
+ * Returns: A floating point value within [min, max)
+ */
+float random(const float min, const float max) {
+    return min + (max-min) * random();
+}
+
+/*
+ * sample_square - Generate a random point in a square
+
+ * Returns: A vec2 within [-0.5, 0.5)
+ */
+vec2 sample_square() {
+    return vec2(random() - 0.5, random() - 0.5);
+}
+
+/*
+ * vec3_random - Generate a random unit vector
+ *
+ * Returns: A vec3 unit vector
+ */
+vec3 vec3_random() {
+    vec3 rand = vec3(random(-1, 1), random(-1, 1), random(-1, 1));
+    while (length(rand) < 0.001) {
+        rand = vec3(random(-1, 1), random(-1, 1), random(-1, 1));
+    }
+    return normalize(rand);
+}
+
+/*
+ * random_on_hemisphere - Generate a random unit vector from a hemisphere
+ *
+ * @normal: The hemisphere's normal vector
+ *
+ * Returns: A vec3 unit vector
+ */
+vec3 random_on_hemisphere(const vec3 normal) {
+    vec3 dir = vec3_random();
+    bool on_hemisphere = dot(dir, normal) > 0.0;
+    return on_hemisphere ? dir : -dir;
+}
+
+/*
+ * to_gamma - Translate color into gamma space
+ *
+ * Returns: vec4 color
+ */
+vec4 to_gamma(const vec4 color) {
+    return vec4(sqrt(color.r), sqrt(color.g), sqrt(color.b), color.b);
+}
+
+/* ================================================================ * 
+ *                        TRACING STRUCTS                           *
+ * ================================================================ */
 
 struct Material {
     vec3 albedo;
@@ -46,48 +115,20 @@ struct HitInfo {
     Material material;
 };
 
-float random() {
-    rand_seed = vec3(rand_seed.xy, rand_seed.z + 3.837);
-    vec3 scale = vec3(12.9898, 78.233, 45.164);
-    float dot_product = dot(rand_seed, scale);
-    return fract(sin(dot_product) * 43758.5453);
-}
-
-float random(const float min, const float max) {
-    return min + (max-min) * random();
-}
-
-vec2 sample_square() {
-    return vec2(random() - 0.5, random() - 0.5);
-}
-
-vec3 vec3_random() {
-    vec3 rand = vec3(random(-1, 1), random(-1, 1), random(-1, 1));
-    while (length(rand) < 0.001) {
-        rand = vec3(random(-1, 1), random(-1, 1), random(-1, 1));
-    }
-    return normalize(rand);
-}
-
-vec3 random_on_hemisphere(const vec3 normal) {
-    vec3 dir = vec3_random();
-    bool on_hemisphere = dot(dir, normal) > 0.0;
-    return on_hemisphere ? dir : -dir;
-}
-
-vec4 to_gamma(const vec4 color) {
-    return vec4(sqrt(color.r), sqrt(color.g), sqrt(color.b), color.b);
-}
-
-/**************************************
-*           RAY FUNCTIONS
-***************************************/
+/* ================================================================ * 
+ *                         RAY FUNCTIONS                            *
+ * ================================================================ */
 
 struct Ray {
     vec3 origin;
     vec3 dir;
 };
 
+/* ray_create - Create a random ray from the camera to the fragment
+ *              position in the tracing plane
+ *
+ * Returns: 3D Ray
+ */
 Ray ray_create() {
     vec2 offset = sample_square();
     offset.x /= resolution.x;
@@ -105,13 +146,21 @@ Ray ray_create() {
     );
 }
 
+/*
+ * ray_at - Calculate position of the ray at a specific distance
+ *
+ * @ray: The ray
+ * @t: The distance
+ *
+ * Returns: vec3 position
+ */
 vec3 ray_at(Ray ray, float t) {
     return ray.origin + t * ray.dir;
 }
 
-/**************************************
-*           SPHERE FUNCTIONS
-***************************************/
+/* ================================================================ * 
+ *                      SPHERE FUNCTIONS                            *
+ * ================================================================ */
 
 struct Sphere {
     vec3 center;
@@ -119,15 +168,34 @@ struct Sphere {
     Material material;
 };
 
-layout(std140) uniform sphere_buffer {
-    Sphere spheres[16];
-};
+// Buffer for spheres uploaded from CPU
+const int MAX_SPHERES = 16;
 uniform int SPHERES_NUM;
+layout(std140) uniform sphere_buffer {
+    Sphere spheres[MAX_SPHERES];
+};
 
+/*
+ * get_sphere - Create a struct Sphere
+ *
+ * @center: The center point in 3D space
+ * @radius: Sphere radius
+ * @Material: Material of the sphere
+ *
+ * Returns: A struct Sphere
+ */
 Sphere get_sphere(vec3 center, float radius, Material material) {
     return Sphere(center, radius, material);
 }
 
+/*
+ * sphere_hit - Calculate the intersection between a sphere and ray
+ *
+ * @sphere
+ * @ray
+ *
+ * Returns: Floating point distance from ray origin
+ */
 float sphere_hit(Sphere sphere, Ray ray) {
     vec3 oc = sphere.center - ray.origin;
     float a = dot(ray.dir, ray.dir);
@@ -261,7 +329,7 @@ void main() {
     }
 
     float weight = 1.0 / (frame + 1);
-    vec4 tex_color = texture(tex, tex_coord);
+    vec4 tex_color = texture(prev_frame_tex, tex_coord);
     vec4 ray_color = to_gamma(vec4(color / SAMPLES_PER_PIXEL, 1.0));
     out_color = mix(tex_color, ray_color, weight);
 }
