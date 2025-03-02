@@ -26,36 +26,36 @@ namespace Renderer {
 
         state.spheres.push_back(
             Sphere(vec3(-1.0, 0.5, -2.0), 0.5,
-                   Material().lambertian(vec3(1.0, 0.2, 1.0), 1.0)));
+                   Material().lambertian(vec3(1.0, 0.2, 1.0))));
 
         state.spheres.push_back(
             Sphere(vec3(1.0, 0.5, -2.0), 0.5,
-                   Material().metal(vec3(1.0, 1.0, 1.0), 1.0, 0.0))
+                   Material().metal(vec3(1.0, 1.0, 1.0), 0.0))
         );
 
         state.spheres.push_back(
             Sphere(vec3(-0.5, 0.5, -6.0), 0.5,
-                   Material().metal(vec3(1.0, 1.0, 1.0), 1.0, 0.0))
+                   Material().metal(vec3(1.0, 1.0, 1.0), 0.0))
         );
 
         state.spheres.push_back(
             Sphere(vec3(-0.3, 0.1, -1.0), 0.1,
-                   Material().lambertian(vec3(0.3, 0.7, 0.3), 1.0))
+                   Material().lambertian(vec3(0.3, 0.7, 0.3)))
         );
 
         state.spheres.push_back(
             Sphere(vec3(-0.1, 0.1, -1.2), 0.1,
-                   Material().lambertian(vec3(0.7, 0.3, 0.3), 1.0))
+                   Material().lambertian(vec3(0.7, 0.3, 0.3)))
         );
 
         state.spheres.push_back(
             Sphere(vec3(0.3, 0.1, -1.1), 0.1,
-                   Material().lambertian(vec3(0.3, 0.3, 0.7), 1.0))
+                   Material().lambertian(vec3(0.3, 0.3, 0.7)))
         );
 
         state.spheres.push_back(
             Sphere(vec3(0.0, 0.25, -2.1), 0.25,
-                   Material().metal(vec3(0.3, 0.3, 0.7), 1.0, 0.2))
+                   Material().metal(vec3(0.3, 0.3, 0.7), 0.2))
         );
 
         GL::run_loop(state.window, update);

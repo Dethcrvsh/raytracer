@@ -18,7 +18,7 @@ uniform mat4 view_matrix; // Transform the camera
 // Ray
 const float MIN_DIST = 0.001;
 const float MAX_DIST = 100;
-const int SAMPLES_PER_PIXEL = 25;
+const int SAMPLES_PER_PIXEL = 10;
 const int MAX_BOUNCE = 100;
 
 // Constants
@@ -102,8 +102,7 @@ vec4 to_gamma(const vec4 color) {
 
 struct Material {
     vec3 albedo;
-    float reflectance;
-    float specular;
+    int material;
     float fuzz;
 };
 
@@ -134,7 +133,7 @@ Ray ray_create() {
     offset.x /= resolution.x;
     offset.y /= resolution.x;
     float aspect_ratio = resolution.x / resolution.y;
-    float dist = 1.0 / tan(FOV * 0.5 * PI / 180.0);
+    float dist = 1.0 / tan(radians(FOV) * 0.5);
     vec3 ray_pos = vec3(vec4(0.0, 0.0, 0.0, 1.0) * view_matrix);
     vec3 ray_target = vec3(frag_coord.x * aspect_ratio + offset.x, frag_coord.y + offset.y, -dist);
     ray_target = vec3(vec4(ray_target, 1.0) * view_matrix);
@@ -200,7 +199,7 @@ float sphere_hit(Sphere sphere, Ray ray) {
     vec3 oc = sphere.center - ray.origin;
     float a = dot(ray.dir, ray.dir);
     float b = -2.0 * dot(ray.dir, oc);
-    float c = dot(oc, oc) - pow(sphere.radius, 2);
+    float c = dot(oc, oc) - sphere.radius * sphere.radius;
     float discriminant = b * b - 4 * a * c;
 
     if (discriminant < 0) {
@@ -344,8 +343,11 @@ vec3 lambertian_reflectance(HitInfo hit_info) {
 }
 
 vec3 metal_reflectance(HitInfo hit_info, Ray ray) {
-    return normalize(ray.dir - 2 * dot(ray.dir, hit_info.normal) * hit_info.normal) + 
-           hit_info.material.fuzz * vec3_random();
+    return reflect(ray.dir, hit_info.normal) + hit_info.material.fuzz * vec3_random();
+}
+
+vec3 refract_reflectance(HitInfo hit_info, Ray ray) {
+    return refract(ray.dir, hit_info.normal, 0.3);
 }
 
 /*
@@ -367,16 +369,16 @@ vec4 get_ray_color(Ray ray) {
             Material mat = hit_info.material;
 
             // Lambertian reflectance
-            if (mat.reflectance > 0.0) {
+            if (mat.material == 0) {
                 vec3 dir = lambertian_reflectance(hit_info);
                 ray = Ray(hit_info.p, dir);
-                new_color *= hit_info.material.albedo * hit_info.material.reflectance;
+                new_color *= hit_info.material.albedo;
 
-                // Metal reflectance
-            } else if (mat.specular > 0.0) {
+            // Metal reflectance
+            } else if (mat.material == 1) {
                 vec3 dir = metal_reflectance(hit_info, ray);
                 ray = Ray(hit_info.p, dir);
-                new_color *= hit_info.material.albedo * hit_info.material.specular;
+                new_color *= hit_info.material.albedo;
             }
         } else {
             float a = 0.5 * (ray.dir.y + 1.0);
@@ -390,7 +392,7 @@ vec4 get_ray_color(Ray ray) {
 }
 
 void main() {
-    plane = get_plane(vec3(0.0, 1.0, 0.0), vec3(0.0, -0.001, 0.0), Material(vec3(0.86, 0.95, 0.99) * 0.8, 0.0, 1.0, 0.05));
+    plane = get_plane(vec3(0.0, 1.0, 0.0), vec3(0.0, -0.001, 0.0), Material(vec3(0.86, 0.95, 0.99) * 0.8, 1, 0.05));
 
     vec3 color = vec3(0.0, 0.0, 0.0);
     for (int i = 0; i < SAMPLES_PER_PIXEL; i++) {
