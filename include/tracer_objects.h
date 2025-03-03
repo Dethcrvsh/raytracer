@@ -9,12 +9,14 @@ struct Material {
     vec3 albedo;
     GLint material;
     GLfloat fuzz;
+    GLfloat ri;
 
-    GLfloat pad1, pad2, pad3;
+    GLfloat pad1, pad2;
 
     Material() = default;
     Material& lambertian(vec3 const& albedo);
     Material& metal(vec3 const& albedo, GLfloat fuzz);
+    Material& dielectric(vec3 const& albedo, GLfloat ri);
 };
 
 struct Sphere {

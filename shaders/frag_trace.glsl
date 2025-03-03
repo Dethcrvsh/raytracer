@@ -25,6 +25,11 @@ const int MAX_BOUNCE = 100;
 const float PI = 3.141592;
 const float FAR = 999999999;
 
+// Materials
+const int LAMBERTIAN = 0;
+const int METAL = 1;
+const int DIELECTRIC = 2;
+
 /* ================================================================ *
                         UTILITY FUNCTIONS
  * ================================================================ */ 
@@ -104,6 +109,7 @@ struct Material {
     vec3 albedo;
     int material;
     float fuzz;
+    float ri;
 };
 
 struct HitInfo {
@@ -168,7 +174,7 @@ struct Sphere {
 };
 
 // Buffer for spheres uploaded from CPU
-const int MAX_SPHERES = 16;
+const int MAX_SPHERES = 256;
 uniform int SPHERES_NUM;
 layout(std140) uniform sphere_buffer {
     Sphere spheres[MAX_SPHERES];
@@ -346,8 +352,27 @@ vec3 metal_reflectance(HitInfo hit_info, Ray ray) {
     return reflect(ray.dir, hit_info.normal) + hit_info.material.fuzz * vec3_random();
 }
 
-vec3 refract_reflectance(HitInfo hit_info, Ray ray) {
-    return refract(ray.dir, hit_info.normal, 0.3);
+float reflectance(float angle, float ri) {
+    float r0 = (1.0 - ri) / (1.0 + ri);
+    r0 = r0*r0;
+    return r0 + (1.0 - r0) * pow(1.0 - angle, 5);
+}
+
+vec3 dielectric_reflectance(HitInfo hit_info, Ray ray) {
+    float cos_theta = min(dot(-ray.dir, hit_info.normal), 1.0);
+    float sin_theta = sqrt(1.0 - cos_theta*cos_theta);
+
+    // Set refraction index according to face
+    float hit_ri = hit_info.material.ri;
+    float ri = hit_info.front_face ? (1.0 / hit_ri) : hit_ri;
+
+    bool can_refract = ri * sin_theta <= 1.0;
+
+    if (can_refract && reflectance(cos_theta, ri) < random()) {
+        return refract(ray.dir, hit_info.normal, ri);
+    } else {
+        return reflect(ray.dir, hit_info.normal);
+    }
 }
 
 /*
@@ -366,23 +391,22 @@ vec4 get_ray_color(Ray ray) {
 
         // Check if the ray hit
         if (hit_info.t < MAX_DIST) {
-            Material mat = hit_info.material;
+            int mat_type = hit_info.material.material;
+            vec3 scatter;
 
-            // Lambertian reflectance
-            if (mat.material == 0) {
-                vec3 dir = lambertian_reflectance(hit_info);
-                ray = Ray(hit_info.p, dir);
-                new_color *= hit_info.material.albedo;
+            if (mat_type== 0)
+                scatter = lambertian_reflectance(hit_info);
+            if (mat_type == 1)
+                scatter = metal_reflectance(hit_info, ray);
+            if (mat_type == 2)
+                scatter = dielectric_reflectance(hit_info, ray);
 
-            // Metal reflectance
-            } else if (mat.material == 1) {
-                vec3 dir = metal_reflectance(hit_info, ray);
-                ray = Ray(hit_info.p, dir);
-                new_color *= hit_info.material.albedo;
-            }
+            ray = Ray(hit_info.p, scatter);
+            new_color *= hit_info.material.albedo;
+
         } else {
             float a = 0.5 * (ray.dir.y + 1.0);
-            vec3 color = (1.0 - a) * vec3(1.0, 1.0, 1.0) + a * vec3(0.5, 0.7, 1.0);
+            vec3 color = (1.0 - a) * vec3(1.0, 1.0, 1.0) + a * vec3(0.4, 0.6, 1.0);
             new_color *= color;
             return vec4(new_color, 1.0);
         }
@@ -392,7 +416,7 @@ vec4 get_ray_color(Ray ray) {
 }
 
 void main() {
-    plane = get_plane(vec3(0.0, 1.0, 0.0), vec3(0.0, -0.001, 0.0), Material(vec3(0.86, 0.95, 0.99) * 0.8, 1, 0.05));
+    plane = get_plane(vec3(0.0, 1.0, 0.0), vec3(0.0, -0.000, 0.0), Material(vec3(0.86, 0.95, 0.99) * 0.8, 1, 0.05, 0));
 
     vec3 color = vec3(0.0, 0.0, 0.0);
     for (int i = 0; i < SAMPLES_PER_PIXEL; i++) {

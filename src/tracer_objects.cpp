@@ -16,3 +16,11 @@ Material& Material::metal(vec3 const& albedo, GLfloat fuzz) {
     this->material = METAL;
     return *this;
 }
+
+Material& Material::dielectric(vec3 const& albedo, GLfloat ri) {
+    //TODO: assert
+    this->albedo = albedo;
+    this->ri = ri;
+    this->material = DIELECTRIC;
+    return *this;
+}

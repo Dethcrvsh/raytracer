@@ -58,6 +58,16 @@ namespace Renderer {
                    Material().metal(vec3(0.3, 0.3, 0.7), 0.2))
         );
 
+        state.spheres.push_back(
+            Sphere(vec3(-2.3, 0.5, -1.5), 0.50,
+                   Material().dielectric(vec3(1.0, 1.0, 1.0), 1.5))
+        );
+
+        state.spheres.push_back(
+            Sphere(vec3(-2.3, 0.5, -1.5), 0.4,
+                   Material().dielectric(vec3(1.0, 1.0, 1.0), 1.0 / 1.5))
+        );
+
         GL::run_loop(state.window, update);
     }
 

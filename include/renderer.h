@@ -31,7 +31,7 @@ namespace Renderer {
 
         // Graphics objects
         Model render_base;
-        GLArray<Sphere, 16> spheres;
+        GLArray<Sphere, 256> spheres;
 
         Camera camera;
     };
