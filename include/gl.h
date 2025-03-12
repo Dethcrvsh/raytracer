@@ -24,6 +24,7 @@ namespace GL {
     GLuint compile_shader(std::string const& source, GLenum const type);
     GLuint create_program(std::string const& vertex_path, std::string const& fragment_path);
     FBO create_fbo();
+    GLuint get_binding_point();
 };
 
 
@@ -34,7 +35,7 @@ public:
         this->program = program;
         this->block_name = block_name;
         // WARN: This is absolutely not thread safe
-        this->binding_point = next_binding_point++;
+        this->binding_point = GL::get_binding_point();
 
         // Create a uniform buffer object
         glGenBuffers(1, &ubo);
@@ -118,14 +119,7 @@ public:
         vector.pop_back();
     }
 
-    // TODO: Remove
-    GLuint b() {
-        return binding_point;
-    }
-
 private:
-    inline static GLuint next_binding_point {};
-
     GLuint ubo;
     GLuint program;
     GLuint binding_point;

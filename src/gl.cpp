@@ -139,4 +139,9 @@ void FBO::use() const {
     glBindFramebuffer(GL_FRAMEBUFFER, fbo);
 }
 
+GLuint get_binding_point() {
+    GLuint static next_binding_point {};
+    return next_binding_point++;
+}
+
 };

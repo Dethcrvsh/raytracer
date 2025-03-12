@@ -27,3 +27,16 @@ struct Sphere {
     Sphere() = default;
     Sphere(vec3 const& center, GLfloat radius, Material const& material);
 };
+
+struct Quad {
+    vec3 Q;
+    GLfloat pad1;
+    vec3 u;
+    GLfloat pad2;
+    vec3 v;
+    GLfloat pad3;
+    Material material;
+
+    Quad() = default;
+    Quad(vec3 const& Q, vec3 const& u, vec3 const& v, Material const& material);
+};

@@ -23,6 +23,8 @@ namespace Renderer {
         // Bind the GLArray to the correct buffers
         state.spheres.bind(state.program, "sphere_buffer");
         state.spheres.bind_size(state.program, "SPHERES_NUM");
+        state.quads.bind(state.program, "quad_buffer");
+        state.quads.bind_size(state.program, "QUADS_NUM");
 
         state.spheres.push_back(
             Sphere(vec3(-1.0, 0.5, -2.0), 0.5,
@@ -68,6 +70,21 @@ namespace Renderer {
                    Material().dielectric(vec3(1.0, 1.0, 1.0), 1.0 / 1.5))
         );
 
+        state.spheres.push_back(
+            Sphere(vec3(-1.3, 0.5, -3.5), 0.5,
+                   Material().dielectric(vec3(1.0, 1.0, 1.0), 1.5))
+        );
+
+        state.quads.push_back(
+            Quad(vec3(2.0, 0.0, 0.0), vec3(0.0, 0.0, 1.0), vec3(0.0, 1.0, 0.0),
+                 Material().lambertian(vec3(1.0, 0.4, 0.5)))
+        );
+
+        state.quads.push_back(
+            Quad(vec3(2.0, 0.0, 0.0), vec3(0.0, 1.0, 0.0), vec3(1.0, 0.0, 0.0),
+                 Material().lambertian(vec3(1.0, 0.4, 0.5)))
+        );
+
         GL::run_loop(state.window, update);
     }
 
@@ -85,6 +102,7 @@ namespace Renderer {
         glUseProgram(state.program);
 
         state.spheres.upload();
+        state.quads.upload();
 
         // Update the camera on movement
         if (state.camera.move(state.window, delta)) {

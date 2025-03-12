@@ -296,6 +296,62 @@ HitInfo plane_hit_data(Plane plane, Ray ray, float t) {
 }
 
 /* ================================================================ *
+ *                         QUAD FUNCTIONS                           *
+ * ================================================================ */
+
+struct Quad {
+    vec3 Q;
+    vec3 u;
+    vec3 v;
+    Material material;
+};
+
+// Buffer for quads uploaded from CPU
+const int MAX_QUADS = 256;
+uniform int QUADS_NUM;
+layout(std140) uniform quad_buffer {
+    Quad quads[MAX_QUADS];
+};
+
+float quad_hit(Quad quad, Ray ray) {
+    vec3 n = cross(quad.u, quad.v);
+    vec3 normal = normalize(n);
+    float denom = dot(normal, ray.dir);
+
+    if (abs(denom) < 1e-8) {
+        return -1.0;
+    }
+
+    float D = dot(normal, quad.Q);
+    float t = (D - dot(normal, ray.origin)) / denom;
+
+    if (t <= MIN_DIST || t > MAX_DIST) {
+        return -1.0;
+    } 
+
+    vec3 intersection = ray_at(ray, t);
+    vec3 planar_hit = intersection - quad.Q;
+    vec3 w = n / dot(n, n);
+    float alpha = dot(w, cross(planar_hit, quad.v));
+    float beta = dot(w, cross(quad.u, planar_hit));
+
+    bool contains_alpha = 0.0 < alpha && alpha <= 1.0;
+    bool contains_beta = 0.0 < beta && beta <= 1.0;
+
+    if (!contains_alpha || !contains_beta) {
+        return -1.0;
+    }
+
+    return t;
+}
+
+HitInfo quad_hit_data(Quad quad, Ray ray, float t) {
+    vec3 p = ray_at(ray, t);
+    vec3 normal = normalize(cross(quad.u, quad.v));
+    return HitInfo(p, normal, t, true, quad.material);
+}
+
+/* ================================================================ *
  *                      TRACING FUNCTIONS                           *
  * ================================================================ */
 
@@ -325,6 +381,18 @@ void trace_scene(Ray ray, inout HitInfo hit_info) {
         // Keep the closest hit sphere
         if (MIN_DIST <= t && t < dist) {
             hit_info = sphere_hit_data(sphere, ray, t);
+            dist = hit_info.t;
+        }
+    }
+
+    // Check if the ray intersects any quad
+    for (int i = 0; i < QUADS_NUM; i++) {
+        Quad quad = quads[i];
+        float t = quad_hit(quad, ray);
+
+        // Keep the closest hit quad
+        if (MIN_DIST <= t && t < dist) {
+            hit_info = quad_hit_data(quad, ray, t);
             dist = hit_info.t;
         }
     }
