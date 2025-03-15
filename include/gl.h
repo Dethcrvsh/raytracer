@@ -22,7 +22,8 @@ namespace GL {
     void run_loop(GLFWwindow* const window, std::function<void()> const& callback);
     std::string read_file(std::string const& file_path);
     GLuint compile_shader(std::string const& source, GLenum const type);
-    GLuint create_program(std::string const& vertex_path, std::string const& fragment_path);
+    GLuint create_program(std::string const& vertex_code, std::string const& fragment_code);
+    GLuint create_program_from_file(std::string const& vertex_path, std::string const& fragment_path);
     FBO create_fbo();
     GLuint get_binding_point();
 };

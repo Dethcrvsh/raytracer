@@ -1,11 +1,12 @@
 #include "renderer.h"
+#include "wasm_shaders.h"
 
 namespace Renderer {
     void init() {
         // Initialize OpenGL
         state.window = GL::init();
-        state.program = GL::create_program("vert_pass.glsl", "frag_trace.glsl");
-        state.tex_program = GL::create_program("vert_pass.glsl", "frag_tex.glsl");
+        state.program = GL::create_program(Shaders::vert_pass, Shaders::frag_trace);
+        state.tex_program = GL::create_program(Shaders::vert_pass, Shaders::frag_tex);
         state.fbo_current = GL::create_fbo();
         state.fbo_prev = GL::create_fbo();
 

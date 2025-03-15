@@ -1,0 +1,10 @@
+#pragma once
+
+#include <string>
+
+namespace Shaders {
+    std::string const frag_tex {std::string(R"(@FRAG_TEX_SHADER@)")};
+    std::string const frag_trace {std::string(R"(@FRAG_TRACE_SHADER@)")};
+    std::string const vert_pass {std::string(R"(@VERT_PASS_SHADER@)")};
+};
+

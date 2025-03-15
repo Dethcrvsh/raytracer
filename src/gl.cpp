@@ -73,11 +73,7 @@ GLuint compile_shader(std::string const& source, GLenum const type) {
     return shader;
 }
 
-GLuint create_program(std::string const& vertex_path, std::string const& fragment_path) {
-    // Read shader files
-    std::string const vertex_code {read_file(vertex_path)};
-    std::string const fragment_code {read_file(fragment_path)};
-
+GLuint create_program(std::string const& vertex_code, std::string const& fragment_code) {
     // Compile Shaders
     GLuint vertex_shader {compile_shader(vertex_code, GL_VERTEX_SHADER)};
     GLuint fragment_shader {compile_shader(fragment_code, GL_FRAGMENT_SHADER)};
@@ -103,6 +99,13 @@ GLuint create_program(std::string const& vertex_path, std::string const& fragmen
     glDeleteShader(fragment_shader);
 
     return program;
+}
+
+GLuint create_program_from_file(std::string const& vertex_path, std::string const& fragment_path) {
+    // Read shader files
+    std::string const vertex_code {read_file(vertex_path)};
+    std::string const fragment_code {read_file(fragment_path)};
+    return create_program(vertex_code, fragment_code);
 }
 
 FBO create_fbo() {
